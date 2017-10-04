@@ -8,6 +8,8 @@ var app = (function () {
     }
     
     var stompClient = null;
+    
+    var id=0;
 
     var addPointToCanvas = function (point) {        
         var canvas = document.getElementById("canvas");
@@ -36,7 +38,7 @@ var app = (function () {
         //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
             console.log('Connected: ' + frame);
-            stompClient.subscribe('/topic/newpoint', function (eventbody) {
+            stompClient.subscribe('/topic/newpoint.'+id, function (eventbody) {
                 var theObject=JSON.parse(eventbody.body);
                 addPointToCanvas(theObject);
             });
@@ -67,16 +69,25 @@ var app = (function () {
             if(window.PointerEvent){
                 canvas.addEventListener("pointerdown",function(event){
                     var xxx = getOffset(canvas);
-                    stompClient.send("/topic/newpoint", {}, JSON.stringify({"x":event.pageX-xxx.left,"y":event.pageY-xxx.top}));
+                    stompClient.send("/topic/newpoint."+id, {}, JSON.stringify({"x":event.pageX-xxx.left,"y":event.pageY-xxx.top}));
                 });
             }else{
                 canvas.addEventListener("mousedown",function(event){
                     var xxx = getOffset(canvas);
-                    stompClient.send("/topic/newpoint", {}, JSON.stringify({"x":event.clientX-xxx.left,"y":event.clientY-xxx.top}));
+                    stompClient.send("/topic/newpoint."+id, {}, JSON.stringify({"x":event.clientX-xxx.left,"y":event.clientY-xxx.top}));
                 });
             };
+            
+        },
+
+        conect:function(){
             //websocket connection
-            connectAndSubscribe();
+            console.info(document.getElementById("campo").value);
+            if(document.getElementById("campo").value>0){
+                id = document.getElementById("campo").value;
+                console.info(id);
+                connectAndSubscribe();
+            }
         },
 
         publishPoint: function(px,py){
@@ -85,7 +96,7 @@ var app = (function () {
             addPointToCanvas(pt);
 
             //publicar el evento
-            stompClient.send("/topic/newpoint", {}, JSON.stringify({"x":px,"y":py}));
+            stompClient.send("/topic/newpoint."+id, {}, JSON.stringify({"x":px,"y":py}));
         },
 
         disconnect: function () {
