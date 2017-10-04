@@ -39,11 +39,24 @@ var app = (function () {
             stompClient.subscribe('/topic/newpoint', function (eventbody) {
                 var theObject=JSON.parse(eventbody.body);
                 addPointToCanvas(theObject);
-                alert("LLEGO");
             });
         });
 
     };
+    
+    function getOffset(obj) {
+          var offsetLeft = 0;
+          var offsetTop = 0;
+          do {
+            if (!isNaN(obj.offsetLeft)) {
+                offsetLeft += obj.offsetLeft;
+            }
+            if (!isNaN(obj.offsetTop)) {
+                offsetTop += obj.offsetTop;
+            }   
+          } while(obj = obj.offsetParent );
+          return {left: offsetLeft, top: offsetTop};
+      }
     
     
 
@@ -51,7 +64,17 @@ var app = (function () {
 
         init: function() {
             var can = document.getElementById("canvas");
-            
+            if(window.PointerEvent){
+                canvas.addEventListener("pointerdown",function(event){
+                    var xxx = getOffset(canvas);
+                    stompClient.send("/topic/newpoint", {}, JSON.stringify({"x":event.pageX-xxx.left,"y":event.pageY-xxx.top}));
+                });
+            }else{
+                canvas.addEventListener("mousedown",function(event){
+                    var xxx = getOffset(canvas);
+                    stompClient.send("/topic/newpoint", {}, JSON.stringify({"x":event.clientX-xxx.left,"y":event.clientY-xxx.top}));
+                });
+            };
             //websocket connection
             connectAndSubscribe();
         },
