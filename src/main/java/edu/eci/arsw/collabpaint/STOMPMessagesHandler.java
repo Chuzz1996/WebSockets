@@ -34,6 +34,7 @@ public class STOMPMessagesHandler {
             int num = Integer.parseInt(numdibujo);
             if(points.containsKey(num)){
                 points.get(num).add(pt);
+                msgt.convertAndSend("/topic/newpoint"+num, pt);
                 if(points.get(num).size()>=4){
                     msgt.convertAndSend("/topic/newpolygon."+num,points.get(num));
                 }
