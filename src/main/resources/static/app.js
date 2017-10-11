@@ -47,9 +47,14 @@ var app = (function () {
         var socket = new SockJS('/stompendpoint');
         stompClient = Stomp.over(socket);
         
-        //subscribe to /topic/TOPICXX when connections succeed
         stompClient.connect({}, function (frame) {
-            console.log('Connected: ' + frame);
+            console.log('Connected 1: ' + frame);
+            stompClient.subscribe('/topic/newpoint.'+id, function (eventbody) {
+                var theObject=JSON.parse(eventbody.body);
+                addPointToCanvas(theObject);
+            });
+            
+            console.log('Connected 2: ' + frame);
             stompClient.subscribe('/topic/newpolygon.'+id, function (eventbody) {
                 var theObject=JSON.parse(eventbody.body);
                 addPolygonToCanvas(theObject);
@@ -106,7 +111,7 @@ var app = (function () {
             addPointToCanvas(pt);
 
             //publicar el evento
-            stompClient.send("/app/newpoint."+id, {}, JSON.stringify({"x":px,"y":py}));
+            stompClient.send("/topic/newpoint."+id, {}, JSON.stringify({"x":px,"y":py}));
         },
 
         disconnect: function () {
